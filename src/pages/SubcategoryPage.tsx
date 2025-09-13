@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import MessagingModal from '@/components/MessagingModal';
 
 interface Advertisement {
   id: string;
@@ -28,8 +30,11 @@ interface Advertisement {
 
 const SubcategoryPage = () => {
   const { category, subcategory } = useParams();
+  const { user } = useAuth();
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMessagingOpen, setIsMessagingOpen] = useState(false);
+  const [selectedAdForMessage, setSelectedAdForMessage] = useState<Advertisement | null>(null);
 
   const categoryTitles: Record<string, string> = {
     'automobiles': 'Автомобілі',
@@ -252,10 +257,13 @@ const SubcategoryPage = () => {
                                 className="flex-1 text-xs hover:scale-105 transition-transform"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  e.stopPropagation();
-                                }}
-                              >
-                                Детальніше
+                                  if (user && user.id !== ad.user_id) {
+                                    setSelectedAdForMessage(ad);
+                                    setIsMessagingOpen(true);
+                                  } else if (!user) {
+                                    toast.error('Увійдіть в акаунт для відправки повідомлень');
+                                  } else {
+                                Написати
                               </Button>
                               {(ad.discord_contact || ad.telegram_contact) && (
                                 <Button 
@@ -305,6 +313,16 @@ const SubcategoryPage = () => {
       </section>
 
       <Footer />
+      
+      <MessagingModal
+        isOpen={isMessagingOpen}
+        onClose={() => {
+          setIsMessagingOpen(false);
+          setSelectedAdForMessage(null);
+        }}
+        recipientId={selectedAdForMessage?.user_id}
+        advertisementId={selectedAdForMessage?.id}
+      />
     </div>
   );
 };

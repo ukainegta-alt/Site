@@ -13,6 +13,7 @@ import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { hasPermission, initializeUserContext } from '@/lib/auth';
 import EditAdModal from '@/components/EditAdModal';
+import MessagingModal from '@/components/MessagingModal';
 
 interface Advertisement {
   id: string;
@@ -40,6 +41,7 @@ const AdvertisementPage = () => {
   const [advertisement, setAdvertisement] = useState<Advertisement | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isMessagingOpen, setIsMessagingOpen] = useState(false);
 
   useEffect(() => {
     const initAndFetch = async () => {
@@ -305,6 +307,16 @@ const AdvertisementPage = () => {
                           Telegram: {advertisement.telegram_contact}
                         </Button>
                       )}
+                      {user && user.id !== advertisement.user_id && (
+                        <Button 
+                          size="lg" 
+                          className="btn-primary hover:scale-105 transition-transform"
+                          onClick={() => setIsMessagingOpen(true)}
+                        >
+                          <MessageCircle className="w-5 h-5 mr-2" />
+                          Написати повідомлення
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -324,6 +336,13 @@ const AdvertisementPage = () => {
           fetchAdvertisement();
           setIsEditModalOpen(false);
         }}
+      />
+      
+      <MessagingModal
+        isOpen={isMessagingOpen}
+        onClose={() => setIsMessagingOpen(false)}
+        recipientId={advertisement?.user_id}
+        advertisementId={advertisement?.id}
       />
     </div>
   );

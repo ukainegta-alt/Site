@@ -197,6 +197,35 @@
   .animate-bounce-in {
     animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
+
+  /* Modern glassmorphism effects */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Improved focus states */
+  .focus-glow:focus {
+    box-shadow: 0 0 0 3px hsl(var(--accent) / 0.3);
+    border-color: hsl(var(--accent));
+  }
+
+  /* Better hover transitions */
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 40px -10px hsl(var(--shadow-soft) / 0.4);
+  }
 }
 
 @keyframes fadeIn {

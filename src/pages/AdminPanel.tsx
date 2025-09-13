@@ -132,7 +132,11 @@ const AdminPanel = () => {
       if (error) throw error;
 
       // Log the action
-      await logAction(`${action}${newRole ? `_${newRole}` : ''}`, targetUserId, { action, newRole });
+      await logAction(`${action}${newRole ? `_to_${newRole}` : ''}`, targetUserId, { 
+        action, 
+        newRole,
+        target_nickname: users.find(u => u.id === targetUserId)?.nickname 
+      });
 
       toast.success('Дію виконано успішно');
       fetchData();
@@ -145,6 +149,8 @@ const AdminPanel = () => {
     if (!confirm('Ви впевнені, що хочете видалити це оголошення?')) return;
 
     try {
+      const adToDelete = advertisements.find(ad => ad.id === adId);
+      
       const { error } = await supabase
         .from('advertisements')
         .delete()
@@ -153,7 +159,11 @@ const AdminPanel = () => {
       if (error) throw error;
 
       // Log the action
-      await logAction('delete_advertisement', undefined, { advertisement_id: adId });
+      await logAction('delete_advertisement', adToDelete?.user_id, { 
+        advertisement_id: adId,
+        advertisement_title: adToDelete?.title,
+        advertisement_author: adToDelete?.users?.nickname
+      });
 
       toast.success('Оголошення видалено');
       fetchData();
@@ -164,6 +174,8 @@ const AdminPanel = () => {
 
   const handlePromoteAd = async (adId: string, isVip: boolean) => {
     try {
+      const adToPromote = advertisements.find(ad => ad.id === adId);
+      
       const { error } = await supabase
         .from('advertisements')
         .update({ is_vip: !isVip })
@@ -171,7 +183,15 @@ const AdminPanel = () => {
 
       if (error) throw error;
 
-      await logAction(isVip ? 'demote_advertisement' : 'promote_advertisement', undefined, { advertisement_id: adId });
+      await logAction(
+        isVip ? 'demote_advertisement' : 'promote_advertisement', 
+        adToPromote?.user_id, 
+        { 
+          advertisement_id: adId,
+          advertisement_title: adToPromote?.title,
+          advertisement_author: adToPromote?.users?.nickname
+        }
+      );
       
       toast.success(isVip ? 'VIP статус знято' : 'Надано VIP статус');
       fetchData();
@@ -331,6 +351,9 @@ const AdminPanel = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Управління користувачами</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Всього користувачів: {users.length}
+                    </p>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -343,13 +366,14 @@ const AdminPanel = () => {
                           <div>
                             <p className="font-medium flex items-center gap-2">
                               {targetUser.nickname}
-                              {targetUser.role === 'vip' && <Badge className="bg-accent">VIP</Badge>}
-                              {targetUser.role === 'moderator' && <Badge variant="secondary">Модератор</Badge>}
-                              {targetUser.role === 'admin' && <Badge variant="destructive">Адмін</Badge>}
+                              {targetUser.role === 'vip' && <Badge variant="vip">VIP</Badge>}
+                              {targetUser.role === 'moderator' && <Badge variant="outline">Модератор</Badge>}
+                              {targetUser.role === 'admin' && <Badge variant="admin">Адмін</Badge>}
+                              {targetUser.is_banned && <Badge variant="destructive">Заблокований</Badge>}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              Статус: {targetUser.is_banned ? 'Заблокований' : 'Активний'} | 
-                              Дата реєстрації: {new Date(targetUser.created_at).toLocaleDateString()}
+                              ID: {targetUser.id.slice(0, 8)}... | 
+                              Реєстрація: {new Date(targetUser.created_at).toLocaleDateString('uk-UA')}
                             </p>
                           </div>
                           <div className="flex gap-2">
@@ -400,6 +424,9 @@ const AdminPanel = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Управління оголошеннями</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Всього оголошень: {advertisements.length} | VIP: {advertisements.filter(ad => ad.is_vip).length}
+                    </p>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                       <Input
@@ -422,13 +449,18 @@ const AdminPanel = () => {
                             <div className="flex items-center gap-2 mb-2">
                               <p className="font-medium">{ad.title}</p>
                               {ad.is_vip && <Badge className="bg-accent">VIP</Badge>}
+                              {ad.users?.role === 'admin' && <Badge variant="admin">Адмін</Badge>}
                             </div>
                             <p className="text-sm text-muted-foreground mb-2">
                               Автор: {ad.users?.nickname} | 
                               Категорія: {ad.category}/{ad.subcategory}
+                              {ad.price && ` | Ціна: ${ad.price.toLocaleString('uk-UA')} грн`}
                             </p>
                             <p className="text-sm text-muted-foreground mb-2">
                               {ad.description.substring(0, 150)}...
+                            </p>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Створено: {new Date(ad.created_at).toLocaleString('uk-UA')}
                             </p>
                             <div className="flex gap-2 text-xs text-muted-foreground">
                               {ad.discord_contact && <span>Discord: {ad.discord_contact}</span>}
@@ -465,6 +497,9 @@ const AdminPanel = () => {
                   <Card>
                     <CardHeader>
                       <CardTitle>Логи дій</CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Останні 50 дій адміністраторів та модераторів
+                      </p>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
@@ -474,19 +509,39 @@ const AdminPanel = () => {
                             className="p-4 border rounded-2xl hover:shadow-md transition-shadow"
                             whileHover={{ scale: 1.01 }}
                           >
-                            <p className="font-medium">
-                              {log.users?.nickname} виконав дію: <Badge variant="outline">{log.action}</Badge>
-                            </p>
-                            {log.target_user && (
-                              <p className="text-sm text-muted-foreground">
-                                Цільовий користувач: {log.target_user.nickname}
-                              </p>
-                            )}
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(log.created_at).toLocaleString()}
-                            </p>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <p className="font-medium mb-1">
+                                  <span className="text-accent">{log.users?.nickname}</span> виконав дію: 
+                                  <Badge variant="outline" className="ml-2">{log.action}</Badge>
+                                </p>
+                                {log.target_user && (
+                                  <p className="text-sm text-muted-foreground">
+                                    Цільовий користувач: <span className="font-medium">{log.target_user.nickname}</span>
+                                  </p>
+                                )}
+                                {log.details && (
+                                  <div className="text-xs text-muted-foreground mt-2">
+                                    {log.details.advertisement_title && (
+                                      <p>Оголошення: {log.details.advertisement_title}</p>
+                                    )}
+                                    {log.details.newRole && (
+                                      <p>Нова роль: {log.details.newRole}</p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground text-right">
+                                {new Date(log.created_at).toLocaleString('uk-UA')}
+                              </div>
+                            </div>
                           </motion.div>
                         ))}
+                        {logs.length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <p>Логи дій поки що відсутні</p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

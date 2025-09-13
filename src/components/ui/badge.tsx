@@ -17,6 +17,7 @@ const badgeVariants = cva(
         outline: "text-foreground",
         admin: "border-transparent bg-red-600 text-white hover:bg-red-700",
         vip: "border-transparent bg-yellow-500 text-black hover:bg-yellow-600",
+        moderator: "border-transparent bg-blue-600 text-white hover:bg-blue-700",
       },
     },
     defaultVariants: {
