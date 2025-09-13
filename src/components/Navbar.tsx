@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Menu, X, User, LogOut, Plus, Settings } from 'lucide-react';
+import { Search, Menu, X, User, LogOut, Plus, Settings, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,11 +16,13 @@ import {
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { Link } from 'react-router-dom';
+import MessagingModal from './MessagingModal';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isMessagingOpen, setIsMessagingOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { user, setUser } = useAuth();
 
@@ -99,12 +101,12 @@ const Navbar = () => {
           {/* Desktop Search */}
           <div className="hidden md:flex items-center flex-1 max-w-lg mx-8">
             <form onSubmit={handleSearch} className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 z-10" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Пошук оголошень..."
-                className="pl-10 border-0 bg-background-secondary rounded-2xl focus:glow-accent"
+                className="pl-10 border border-border bg-background rounded-2xl focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
               />
             </form>
           </div>
@@ -143,6 +145,16 @@ const Navbar = () => {
             {/* Auth Section */}
             {user ? (
               <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsMessagingOpen(true)}
+                  className="rounded-2xl hover:scale-105 transition-transform"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Повідомлення
+                </Button>
+                
                 <Button
                   variant="ghost"
                   size="sm"
@@ -260,6 +272,18 @@ const Navbar = () => {
                 <Button
                   onClick={() => {
                     setIsMenuOpen(false);
+                    setIsMessagingOpen(true);
+                  }}
+                  variant="outline"
+                  className="w-full rounded-2xl"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Повідомлення
+                </Button>
+                
+                <Button
+                  onClick={() => {
+                    setIsMenuOpen(false);
                     window.location.href = '/create-ad';
                   }}
                   className="w-full btn-accent rounded-2xl"
@@ -325,6 +349,11 @@ const Navbar = () => {
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
+      />
+      
+      <MessagingModal
+        isOpen={isMessagingOpen}
+        onClose={() => setIsMessagingOpen(false)}
       />
     </motion.nav>
   );

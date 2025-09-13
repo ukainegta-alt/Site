@@ -88,16 +88,16 @@ const Hero = () => {
             transition={{ duration: 0.8, delay: 0.6 }}
           >
             <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5 z-10" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Пошук оголошень..."
-                className="pl-12 py-6 text-lg border-0 bg-white/10 backdrop-blur-sm rounded-2xl focus:glow-accent"
+                className="pl-12 py-6 text-lg border-2 border-white/20 bg-white/90 backdrop-blur-md rounded-2xl focus:border-accent focus:bg-white shadow-lg text-foreground placeholder:text-muted-foreground"
               />
               <Button
                 type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 btn-accent"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 btn-accent hover:scale-105 transition-transform"
               >
                 Пошук
               </Button>
