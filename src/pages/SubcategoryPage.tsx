@@ -251,9 +251,9 @@ const SubcategoryPage = () => {
                             </div>
                             
                             <div className="flex gap-2">
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
+                              <Button
+                                size="sm"
+                                variant="outline"
                                 className="flex-1 text-xs hover:scale-105 transition-transform"
                                 onClick={(e) => {
                                   e.preventDefault();
@@ -262,7 +262,10 @@ const SubcategoryPage = () => {
                                     setIsMessagingOpen(true);
                                   } else if (!user) {
                                     toast.error('Увійдіть в акаунт для відправки повідомлень');
-                                  } else {
+                                  }
+                                }}
+                              >
+                                <MessageCircle className="w-3 h-3 mr-1" />
                                 Написати
                               </Button>
                               {(ad.discord_contact || ad.telegram_contact) && (
